@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N2 Parking — Interactive System & UI Preview (v1.2)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-hover: #1e40af;
+      --primary-light: #eff6ff;
+      --primary-dark: #0f172a;
+      --accent: #2563eb;
+      --success: #059669;
+      --success-light: #ecfdf5;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --tag-staff: #4338ca;
+      --tag-staff-bg: #e0e7ff;
+      --weekend-bg: #f5f3ff;
+      --weekend-header: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f1f5f9;
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+    
+    /* Sticky Top Preview Bar */
+    .preview-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .preview-bar h1 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-v12 {
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .device-switcher {
+      display: flex;
+      background: #1e293b;
+      padding: 3px;
+      border-radius: 8px;
+      gap: 4px;
+    }
+    .device-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .device-btn:hover { color: #fff; }
+    .device-btn.active {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(37,99,235,0.4);
+    }
+    .test-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-test {
+      background: #10b981;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-test:hover { background: #059669; }
+
+    /* Toast Notification Floating */
+    #toast-container {
+      position: fixed;
+      top: 75px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      background: #ffffff;
+      border-left: 5px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 340px;
+      max-width: 440px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.3s ease;
+    }
+    .toast.hide {
+      opacity: 0;
+      transform: translateX(50px);
+    }
+    .toast-icon { font-size: 1.4rem; line-height: 1; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 600; font-size: 0.95rem; color: var(--text); margin-bottom: 2px; }
+    .toast-msg { font-size: 0.85rem; color: var(--text-muted); }
+    .toast-submitter {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--tag-staff);
+      background: var(--tag-staff-bg);
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Device Viewport Wrapper */
+    .viewport-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 20px 16px;
+      transition: all 0.3s ease;
+    }
+    .device-frame {
+      width: 100%;
+      max-width: 1320px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .device-frame.ipad {
+      max-width: 880px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      border: 8px solid #334155;
+      border-radius: 28px;
+    }
+    .device-frame.mobile {
+      max-width: 420px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      border: 8px solid #334155;
+      border-radius: 28px;
+    }
+
+    /* Web App Header & Navigation (Matching User's Image 1) */
+    .app-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .app-nav {
+      display: flex;
+      gap: 4px;
+      font-size: 0.88rem;
+      overflow-x: auto;
+      max-width: 100%;
+      padding-bottom: 2px;
+    }
+    .app-nav button {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.78);
+      cursor: pointer;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .app-nav button:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .app-nav button.active {
+      background: rgba(255,255,255,0.22);
+      color: #fff;
+      font-weight: 600;
+    }
+    .app-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      background: rgba(255,255,255,0.12);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* App Body & Tabs */
+    .app-body {
+      padding: 20px;
+      background: #f8fafc;
+      min-height: 620px;
+    }
+    .tab-page {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    .tab-page.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Form Styles (Tab 1: New Booking Page) */
+    .form-container {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+    .form-header {
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .form-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .booking-id-tag {
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 4px 12px;
+      border-radius: 8px;
+      border: 1px solid #bfdbfe;
+    }
+    .form-section { margin-bottom: 22px; }
+    .form-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .mobile .form-grid-2, .mobile .form-grid-3 { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+    .form-control {
+      padding: 9px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: #fff;
+      color: #0f172a;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    }
+
+    /* Slot Allocator Card */
+    .slot-allocator-card {
+      background: linear-gradient(135deg, #1e3a8a, #1e40af);
+      color: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .slot-alloc-info h4 { font-size: 0.85rem; opacity: 0.85; margin-bottom: 4px; }
+    .slot-alloc-num {
+      font-size: 1.6rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .slot-alloc-method { display: flex; gap: 8px; }
+    .btn-alloc-mode {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .btn-alloc-mode.active { background: #fff; color: #1e3a8a; border-color: #fff; }
+
+    /* Radio Pill & Counters */
+    .radio-pill-group { display: flex; gap: 8px; }
+    .radio-pill {
+      flex: 1;
+      text-align: center;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+      background: #f8fafc;
+      transition: all 0.2s;
+    }
+    .radio-pill.selected { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; }
+
+    .shuttle-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .shuttle-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #1e3a8a;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .counter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+    }
+    .counter-ctrl { display: flex; align-items: center; gap: 8px; }
+    .btn-qty {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-qty:hover { background: #e2e8f0; }
+    .qty-display { font-weight: 700; width: 20px; text-align: center; }
+
+    /* Pricing Box */
+    .pricing-summary-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 18px;
+    }
+    .pricing-rows { display: flex; flex-direction: column; gap: 6px; font-size: 0.88rem; color: #166534; margin-bottom: 12px; }
+    .pricing-row { display: flex; justify-content: space-between; }
+    .pricing-total-row {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px dashed #86efac;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #14532d;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .btn-submit-booking {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-submit-booking:hover {
+      background: #1d4ed8;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    }
+
+    /* Tab 2: Booking Report Table (Matching Image 2) */
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .section-title h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .table-responsive {
+      overflow-x: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+    table.data-table th, table.data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    table.data-table th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    table.data-table tr:hover td { background: #fdfdfd; }
+    
+    .badge-confirmed {
+      background: #ecfdf5;
+      color: #059669;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid #a7f3d0;
+    }
+    .btn-edit-row {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+      transition: all 0.2s;
+    }
+    .btn-edit-row:hover { background: #e2e8f0; color: #0f172a; }
+    .btn-cancel-row {
+      background: #fff;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 6px;
+      transition: all 0.2s;
+    }
+    .btn-cancel-row:hover { background: #fef2f2; border-color: #f87171; }
+    .badge-cancelled {
+      background: #fef2f2;
+      color: #dc2626;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid #fecaca;
+    }
+
+    .submitter-badge {
+      background: var(--tag-staff-bg);
+      color: var(--tag-staff);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid #c7d2fe;
+    }
+
+    /* Tab 4: Monthly Parking Slot Grid (Matching Image 1) */
+    .slot-grid-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .month-nav-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-month {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-month:hover { background: #f8fafc; }
+    .month-picker-input {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e3a8a;
+    }
+
+    /* 3 Financial Summary Cards (Image 1) */
+    .slot-stats-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .mobile .slot-stats-summary { grid-template-columns: 1fr; }
+    .slot-stat-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      text-align: center;
+    }
+    .slot-stat-val {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #059669;
+    }
+    .slot-stat-box.forecast .slot-stat-val { color: #d97706; }
+    .slot-stat-box.total .slot-stat-val { color: #2563eb; }
+    .slot-stat-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* Matrix Table Container */
+    .matrix-wrapper {
+      overflow-x: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      max-height: 520px;
+    }
+    table.matrix-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+    table.matrix-table th, table.matrix-table td {
+      border-right: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
+      padding: 4px 6px;
+      text-align: center;
+      min-width: 44px;
+      height: 38px;
+    }
+    table.matrix-table th {
+      background: #f8fafc;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    table.matrix-table th.weekend-header {
+      background: var(--weekend-bg);
+      color: var(--weekend-header);
+    }
+    table.matrix-table td.weekend-cell {
+      background: #faf5ff;
+    }
+    table.matrix-table th.col-slot, table.matrix-table td.col-slot {
+      position: sticky;
+      left: 0;
+      background: #f8fafc;
+      z-index: 25;
+      font-weight: 700;
+      color: #1e3a8a;
+      min-width: 50px;
+      border-right: 2px solid #cbd5e1;
+    }
+    table.matrix-table th.col-slot { z-index: 30; }
+
+    /* Booking Bar inside Matrix */
+    .matrix-bar {
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      height: 28px;
+    }
+    .matrix-bar.blue { background: #2563eb; }
+    .matrix-bar.orange { background: #ea580c; }
+    .matrix-bar.red { background: #dc2626; }
+    .matrix-bar small { opacity: 0.85; font-size: 0.65rem; }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      overflow: hidden;
+      animation: modalSlide 0.25s ease-out;
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      background: #1e3a8a;
+      color: #fff;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      opacity: 0.8;
+    }
+    .btn-close-modal:hover { opacity: 1; }
+    .modal-body { padding: 20px; }
+    .modal-footer {
+      padding: 14px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Buttons */
+    .btn-export {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-export:hover { background: #f8fafc; }
+    .btn-excel { color: #166534; border-color: #bbf7d0; }
+    .btn-excel:hover { background: #f0fdf4; }
+    .btn-pdf { color: #991b1b; border-color: #fecaca; }
+    .btn-pdf:hover { background: #fef2f2; }
+
+    /* Split In-Out Columns */
+    .split-view { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .mobile .split-view { grid-template-columns: 1fr; }
+    .split-col { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .col-header {
+      font-size: 1rem;
+      font-weight: 700;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .col-header.in { color: #1e3a8a; border-color: #3b82f6; }
+    .col-header.out { color: #991b1b; border-color: #ef4444; }
+    .schedule-row {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .sched-time { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+    .sched-info { flex: 1; min-width: 180px; }
+    .sched-info .plate { font-weight: 700; color: #1e3a8a; }
+    .sched-meta { font-size: 0.8rem; color: var(--text-muted); }
+    .cal-box {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 14px;
+      font-size: 0.82rem;
+      font-family: monospace;
+      color: #14532d;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Controls Bar -->
+  <div class="preview-bar">
+    <h1>
+      <i class="ti ti-layout-dashboard"></i> N2 Parking — Design & Workflow Preview
+      <span class="badge-v12">Visio v1.2</span>
+    </h1>
+    
+    <div class="device-switcher">
+      <button class="device-btn active" onclick="setDevice('desktop')">
+        <i class="ti ti-device-desktop"></i> Desktop
+      </button>
+      <button class="device-btn" onclick="setDevice('ipad')">
+        <i class="ti ti-device-tablet"></i> iPad
+      </button>
+      <button class="device-btn" onclick="setDevice('mobile')">
+        <i class="ti ti-device-mobile"></i> Mobile
+      </button>
+    </div>
+
+    <div class="test-actions">
+      <button class="btn-test" onclick="showRandomToast()">
+        <i class="ti ti-bell-ringing"></i> ยิงทดสอบแจ้งเตือน (Toast)
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Floating Container -->
+  <div id="toast-container"></div>
+
+  <!-- Edit Booking Modal (Matching Visio v1.2) -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3><i class="ti ti-pencil"></i> แก้ไขข้อมูลการจอง (Edit Booking)</h3>
+        <button class="btn-close-modal" onclick="closeEditModal()"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:12px; background:#eff6ff; padding:8px 12px; border-radius:8px; border:1px solid #bfdbfe; font-size:0.85rem; font-weight:600; color:#1d4ed8;">
+          กำลังแก้ไข: <span id="m_booking_id">#B2610-01</span> (<span id="m_plate_sub">กข 1234 กทม.</span>)
+        </div>
+        <div class="form-grid-2" style="margin-bottom:12px;">
+          <div class="form-group">
+            <label>ทะเบียนรถ</label>
+            <input type="text" id="m_plate" class="form-control" value="กข 1234 กทม.">
+          </div>
+          <div class="form-group">
+            <label>ช่องจอด</label>
+            <input type="text" id="m_slot" class="form-control" value="ช่อง 25">
+          </div>
+        </div>
+        <div class="form-grid-2" style="margin-bottom:12px;">
+          <div class="form-group">
+            <label>ชื่อลูกค้า</label>
+            <input type="text" id="m_name" class="form-control" value="คุณชาณิช">
+          </div>
+          <div class="form-group">
+            <label>เบอร์โทรศัพท์</label>
+            <input type="tel" id="m_phone" class="form-control" value="090-975-6497">
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>วันเวลารถเข้าจอด</label>
+            <input type="datetime-local" id="m_in_time" class="form-control" value="2026-10-26T04:00">
+          </div>
+          <div class="form-group">
+            <label>วันเวลาเครื่องลง (Arr)</label>
+            <input type="datetime-local" id="m_out_time" class="form-control" value="2026-10-29T00:35">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" class="btn-cancel-row" style="padding:8px 14px; font-size:0.85rem;" onclick="cancelBookingFromModal()">
+          <i class="ti ti-trash"></i> ยกเลิกรายการจองนี้ (Cancel Booking)
+        </button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn-export" onclick="closeEditModal()">ปิดหน้าต่าง</button>
+          <button type="button" class="btn-submit-booking" style="padding:8px 18px;" onclick="saveEditBooking()"><i class="ti ti-check"></i> บันทึกการแก้ไข</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Viewport Frame -->
+  <div class="viewport-wrapper">
+    <div id="deviceFrame" class="device-frame">
+      
+      <!-- App Header Navigation (Exact Names Matching User's Image 1) -->
+      <header class="app-header">
+        <div class="app-logo">
+          <i class="ti ti-parking"></i> N2 PARKING
+        </div>
+        <nav class="app-nav">
+          <button class="active" onclick="switchTab('booking-form')"><i class="ti ti-edit"></i> 1. คีย์จองล็อคช่องจอด</button>
+          <button onclick="switchTab('booking-report')"><i class="ti ti-table"></i> 2. รายงานการจอง</button>
+          <button onclick="switchTab('inout')"><i class="ti ti-arrows-sort"></i> 3. รถเข้า-ออก (ซ้าย/ขวา)</button>
+          <button onclick="switchTab('slot-grid')"><i class="ti ti-layout-grid"></i> 4. ตารางการจอง</button>
+          <button onclick="switchTab('revenue')"><i class="ti ti-report-money"></i> 5. สรุปรายรับ</button>
+          <button onclick="switchTab('settings')"><i class="ti ti-settings"></i> 6. สิทธิ์ & ตั้งค่า</button>
+        </nav>
+        <div class="app-user">
+          <i class="ti ti-user-circle"></i>
+          <span>สมชาย (Staff)</span>
+        </div>
+      </header>
+
+      <!-- App Content Area -->
+      <main class="app-body">
+
+        <!-- ================= TAB 1: 1. คีย์จองล็อคช่องจอด (NEW BOOKING FORM) ================= -->
+        <div id="tab-booking-form" class="tab-page active">
+          <div class="form-container">
+            <div class="form-header">
+              <h2><i class="ti ti-file-plus"></i> คีย์ข้อมูลการจองล็อคช่องจอด (New Booking)</h2>
+              <span class="booking-id-tag"><i class="ti ti-barcode"></i> Booking ID: #B2610-04 (Auto)</span>
+            </div>
+
+            <!-- Slot Allocation Banner -->
+            <div class="slot-allocator-card">
+              <div class="slot-alloc-info">
+                <h4><i class="ti ti-sparkles"></i> ช่องจอดที่จัดสรร (Parking Slot Allocation)</h4>
+                <div class="slot-alloc-num" id="slotDisplay">
+                  <i class="ti ti-parking"></i> ช่อง 28
+                  <span style="font-size:0.8rem; font-weight:normal; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px;">
+                    ⚡ Back-to-Back (คันก่อนออก 02:00 $\rightarrow$ ว่างต่อทันที)
+                  </span>
+                </div>
+              </div>
+              <div class="slot-alloc-method">
+                <button type="button" class="btn-alloc-mode active" id="btnAutoSlot" onclick="setSlotMode('auto')">
+                  <i class="ti ti-sparkles"></i> Auto Select
+                </button>
+                <button type="button" class="btn-alloc-mode" id="btnManualSlot" onclick="setSlotMode('manual')">
+                  <i class="ti ti-hand-click"></i> ระบุช่องเอง
+                </button>
+              </div>
+            </div>
+
+            <form id="bookingForm" onsubmit="event.preventDefault(); submitBookingDemo();">
+              
+              <!-- Section 1: Customer & Vehicle Info -->
+              <div class="form-section">
+                <div class="form-section-title"><i class="ti ti-car"></i> 1. ข้อมูลรถยนต์ & ลูกค้า</div>
+                <div class="form-grid-3">
+                  <div class="form-group">
+                    <label>ทะเบียนรถ *</label>
+                    <input type="text" id="f_plate" class="form-control" placeholder="เช่น 2ขพ 8899 กทม." value="2ขพ 8899 กทม." required>
+                  </div>
+                  <div class="form-group">
+                    <label>รถยนต์ยี่ห้อ / รุ่น *</label>
+                    <input type="text" id="f_brand" class="form-control" placeholder="เช่น Toyota Fortuner (สีขาว)" value="Toyota Fortuner (สีขาว)" required>
+                  </div>
+                  <div class="form-group">
+                    <label>ฝากกุญแจรถ *</label>
+                    <div class="radio-pill-group">
+                      <div class="radio-pill selected" id="optDeposit" onclick="setKeyDeposit(true)">
+                        <i class="ti ti-key"></i> ฝากกุญแจ
+                      </div>
+                      <div class="radio-pill" id="optNoDeposit" onclick="setKeyDeposit(false)">
+                        <i class="ti ti-ban"></i> ไม่ฝาก
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-grid-2" style="margin-top:12px;">
+                  <div class="form-group">
+                    <label>ชื่อผู้ติดต่อ *</label>
+                    <input type="text" id="f_name" class="form-control" placeholder="ชื่อลูกค้า" value="คุณกิตติศักดิ์" required>
+                  </div>
+                  <div class="form-group">
+                    <label>เบอร์โทรศัพท์ *</label>
+                    <input type="tel" id="f_phone" class="form-control" placeholder="08x-xxx-xxxx" value="089-123-4567" required>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 2: Date, Time & Flights -->
+              <div class="form-section">
+                <div class="form-section-title"><i class="ti ti-clock"></i> 2. วัน/เวลา รถเข้าจอด & เครื่องลงจอด (Flight Schedule)</div>
+                <div class="form-grid-3">
+                  <div class="form-group">
+                    <label>วัน/เวลา รถเข้าจอด (Dep) *</label>
+                    <input type="datetime-local" id="f_in_time" class="form-control" value="2026-10-27T06:00" onchange="calcPricing()">
+                  </div>
+                  <div class="form-group">
+                    <label>วัน/เวลา เครื่องลงจอด (Arr) *</label>
+                    <input type="datetime-local" id="f_out_time" class="form-control" value="2026-10-30T15:30" onchange="calcPricing()">
+                  </div>
+                  <div class="form-group">
+                    <label>เที่ยวบินขากลับ (Arr Flight No)</label>
+                    <input type="text" id="f_flight" class="form-control" placeholder="เช่น FD3025, TG102" value="FD3025">
+                  </div>
+                </div>
+
+                <div class="release-tag" style="margin-top:12px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:6px 10px; border-radius:6px; font-size:0.8rem; display:flex; align-items:center; gap:6px;">
+                  <i class="ti ti-clock-check"></i>
+                  <span>
+                    <strong>การปล่อยช่องจอด (Auto Slot Release):</strong> 
+                    ระบบจะปล่อยช่อง 28 ให้ว่างอัตโนมัติในวันที่ <strong>30 ต.ค. เวลา 17:00 น.</strong> (เครื่องลง 15:30 + Buffer 1.5 ชม.)
+                  </span>
+                </div>
+              </div>
+
+              <!-- Section 3: Shuttle Services -->
+              <div class="form-section">
+                <div class="form-section-title"><i class="ti ti-van"></i> 3. บริการเสริม รถรับ-ส่งสนามบิน (Shuttle Service)</div>
+                <div class="form-grid-2">
+                  <div class="shuttle-card">
+                    <div class="shuttle-title"><i class="ti ti-plane-departure"></i> ขาไปส่งสนามบิน (Dep Shuttle)</div>
+                    <div class="counter-row">
+                      <span>ผู้ใหญ่ (฿50/คน)</span>
+                      <div class="counter-ctrl">
+                        <button type="button" class="btn-qty" onclick="changeQty('dep_adult', -1)">-</button>
+                        <span class="qty-display" id="dep_adult">2</span>
+                        <button type="button" class="btn-qty" onclick="changeQty('dep_adult', 1)">+</button>
+                      </div>
+                    </div>
+                    <div class="counter-row">
+                      <span>เด็ก (฿30/คน)</span>
+                      <div class="counter-ctrl">
+                        <button type="button" class="btn-qty" onclick="changeQty('dep_child', -1)">-</button>
+                        <span class="qty-display" id="dep_child">0</span>
+                        <button type="button" class="btn-qty" onclick="changeQty('dep_child', 1)">+</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="shuttle-card">
+                    <div class="shuttle-title"><i class="ti ti-plane-arrival"></i> ขารับจากสนามบิน (Arr Shuttle)</div>
+                    <div class="counter-row">
+                      <span>ผู้ใหญ่ (฿50/คน)</span>
+                      <div class="counter-ctrl">
+                        <button type="button" class="btn-qty" onclick="changeQty('arr_adult', -1)">-</button>
+                        <span class="qty-display" id="arr_adult">2</span>
+                        <button type="button" class="btn-qty" onclick="changeQty('arr_adult', 1)">+</button>
+                      </div>
+                    </div>
+                    <div class="counter-row">
+                      <span>เด็ก (฿30/คน)</span>
+                      <div class="counter-ctrl">
+                        <button type="button" class="btn-qty" onclick="changeQty('arr_child', -1)">-</button>
+                        <span class="qty-display" id="arr_child">0</span>
+                        <button type="button" class="btn-qty" onclick="changeQty('arr_child', 1)">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 4: Live Pricing Breakdown -->
+              <div class="pricing-summary-box">
+                <div class="pricing-rows">
+                  <div class="pricing-row">
+                    <span>ค่าจอดรถ (4 วัน · นับตามกฎ 23:30 / 00:30):</span>
+                    <strong id="price_parking">฿600</strong>
+                  </div>
+                  <div class="pricing-row">
+                    <span>บริการเสริมรถรับ-ส่ง (ผู้ใหญ่ 4 เที่ยวคน):</span>
+                    <strong id="price_shuttle">฿200</strong>
+                  </div>
+                </div>
+                <div class="pricing-total-row">
+                  <span>ยอดสุทธิที่ต้องชำระ (Total Fee):</span>
+                  <span id="price_total" style="color:#059669; font-size:1.35rem;">฿800</span>
+                </div>
+              </div>
+
+              <!-- Form Actions & Submitter Tag -->
+              <div class="form-actions">
+                <div class="submitter-badge">
+                  <i class="ti ti-edit"></i> ✍️ ผู้บันทึก: สมชาย (Staff)
+                </div>
+                <div style="display:flex; gap:10px;">
+                  <button type="reset" class="btn-export" style="padding:10px 16px;">
+                    <i class="ti ti-rotate"></i> ล้างข้อมูล
+                  </button>
+                  <button type="submit" class="btn-submit-booking">
+                    <i class="ti ti-check"></i> บันทึกการจองล็อคช่องจอด
+                  </button>
+                </div>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- ================= TAB 2: 2. รายงานการจอง (BOOKING REPORT - EXACT MATCH IMAGE 2) ================= -->
+        <div id="tab-booking-report" class="tab-page">
+          <div class="section-title">
+            <h2><i class="ti ti-table"></i> หน้ารายงานการจอง</h2>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-export btn-excel" onclick="alert('Export รายงานการจองเป็น Excel (.xlsx)')"><i class="ti ti-file-spreadsheet"></i> Export Excel</button>
+              <button class="btn-export btn-pdf" onclick="alert('Export รายงานการจองเป็น PDF')"><i class="ti ti-file-type-pdf"></i> Export PDF</button>
+            </div>
+          </div>
+
+          <!-- Dynamic 5-Step Granular Flow (Controlled from Tab 6 Settings) -->
+          <div id="granularStepsBanner" style="display:none; background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:16px;">
+            <div style="font-weight:700; font-size:0.9rem; color:#1e3a8a; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+              <i class="ti ti-route"></i> ขั้นตอนงานภาคสนามแบบละเอียด (5 ขั้นตอนจริง · เปิดจากหน้า 6. สิทธิ์ & ตั้งค่า)
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; overflow-x:auto; padding:6px 0;">
+              <span class="badge-confirmed"><i class="ti ti-check"></i> 1. รับงาน</span>
+              <span style="color:#94a3b8;"><i class="ti ti-chevron-right"></i></span>
+              <span class="badge-confirmed"><i class="ti ti-check"></i> 2. รถเข้าจอด</span>
+              <span style="color:#94a3b8;"><i class="ti ti-chevron-right"></i></span>
+              <span class="badge-confirmed"><i class="ti ti-check"></i> 3. ส่งผู้โดยสาร</span>
+              <span style="color:#94a3b8;"><i class="ti ti-chevron-right"></i></span>
+              <span style="background:#eff6ff; color:#1d4ed8; padding:4px 10px; border-radius:6px; font-weight:700; border:1px solid #bfdbfe; font-size:0.8rem;"><i class="ti ti-loader-2 ti-spin"></i> 4. รับผู้โดยสาร</span>
+              <span style="color:#94a3b8;"><i class="ti ti-chevron-right"></i></span>
+              <span style="background:#f8fafc; color:#64748b; padding:4px 10px; border-radius:6px; font-size:0.8rem; border:1px solid #cbd5e1;"><i class="ti ti-circle"></i> 5. วัน/เวลารถออก</span>
+            </div>
+          </div>
+
+          <!-- Booking Table (Matching Image 2: "เครื่องลง" and "Confirmed + ปุ่มแก้ไข") -->
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Booking ID</th>
+                  <th>ทะเบียนรถ</th>
+                  <th>ชื่อลูกค้า</th>
+                  <th>ช่องจอด</th>
+                  <th>เข้าจอด</th>
+                  <th>เครื่องลง</th>
+                  <th>สถานะปัจจุบัน</th>
+                  <th>ผู้บันทึก</th>
+                </tr>
+              </thead>
+              <tbody id="bookingReportRows">
+                <tr id="row_b1">
+                  <td><strong>#B2610-01</strong></td>
+                  <td><strong>กข 1234 กทม.</strong></td>
+                  <td>คุณชาณิช</td>
+                  <td><span class="slot-badge auto" style="font-size:0.75rem; background:#1e3a8a; color:#fff; padding:2px 8px; border-radius:4px;">ช่อง 25</span></td>
+                  <td>26 ต.ค. 04:00</td>
+                  <td>29 ต.ค. 00:35</td>
+                  <td id="status_cell_b1">
+                    <span class="badge-confirmed"><i class="ti ti-check"></i> Confirmed</span>
+                    <button class="btn-edit-row" onclick="openEditModal('#B2610-01', 'กข 1234 กทม.', 'คุณชาณิช', '090-975-6497', 'ช่อง 25', '2026-10-26T04:00', '2026-10-29T00:35')">
+                      <i class="ti ti-pencil"></i> ปุ่มแก้ไข
+                    </button>
+                    <button class="btn-cancel-row" onclick="cancelBookingDirect('#B2610-01', 'กข 1234 กทม.', 'status_cell_b1')">
+                      <i class="ti ti-x"></i> ปุ่มยกเลิก
+                    </button>
+                  </td>
+                  <td><span class="submitter-badge">สมชาย (Staff)</span></td>
+                </tr>
+                <tr id="row_b2">
+                  <td><strong>#B2610-02</strong></td>
+                  <td><strong>ษจ 9876 เชียงใหม่</strong></td>
+                  <td>คุณยานัด</td>
+                  <td><span class="slot-badge auto" style="font-size:0.75rem; background:#1e3a8a; color:#fff; padding:2px 8px; border-radius:4px;">ช่อง 24</span></td>
+                  <td>26 ต.ค. 14:00</td>
+                  <td>28 ต.ค. 18:30</td>
+                  <td id="status_cell_b2">
+                    <span class="badge-confirmed"><i class="ti ti-check"></i> Confirmed</span>
+                    <button class="btn-edit-row" onclick="openEditModal('#B2610-02', 'ษจ 9876 เชียงใหม่', 'คุณยานัด', '088-286-3934', 'ช่อง 24', '2026-10-26T14:00', '2026-10-28T18:30')">
+                      <i class="ti ti-pencil"></i> ปุ่มแก้ไข
+                    </button>
+                    <button class="btn-cancel-row" onclick="cancelBookingDirect('#B2610-02', 'ษจ 9876 เชียงใหม่', 'status_cell_b2')">
+                      <i class="ti ti-x"></i> ปุ่มยกเลิก
+                    </button>
+                  </td>
+                  <td><span class="submitter-badge">วาสนา (Staff)</span></td>
+                </tr>
+                <tr id="row_b3">
+                  <td><strong>#B2610-03</strong></td>
+                  <td><strong>1กศ 5432 กทม.</strong></td>
+                  <td>คุณภัทรเดช</td>
+                  <td><span class="slot-badge" style="font-size:0.75rem; background:#475569; color:#fff; padding:2px 8px; border-radius:4px;">ช่อง 12</span></td>
+                  <td>26 ต.ค. 09:30</td>
+                  <td>27 ต.ค. 21:15</td>
+                  <td id="status_cell_b3">
+                    <span class="badge-confirmed"><i class="ti ti-check"></i> Confirmed</span>
+                    <button class="btn-edit-row" onclick="openEditModal('#B2610-03', '1กศ 5432 กทม.', 'คุณภัทรเดช', '081-810-7374', 'ช่อง 12', '2026-10-26T09:30', '2026-10-27T21:15')">
+                      <i class="ti ti-pencil"></i> ปุ่มแก้ไข
+                    </button>
+                    <button class="btn-cancel-row" onclick="cancelBookingDirect('#B2610-03', '1กศ 5432 กทม.', 'status_cell_b3')">
+                      <i class="ti ti-x"></i> ปุ่มยกเลิก
+                    </button>
+                  </td>
+                  <td><span class="submitter-badge">แอดมินวิทย์ (Admin)</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= TAB 3: 3. รถเข้า-ออก (ซ้าย/ขวา) ================= -->
+        <div id="tab-inout" class="tab-page">
+          <div class="section-title">
+            <h2><i class="ti ti-arrows-sort"></i> หน้าจอรายงาน รถเข้า-รถออก (แยก ซ้าย/ขวา)</h2>
+            <small style="color:var(--text-muted)">*แสดงผู้บันทึกชัดเจน + ซิงค์เข้า Google Calendar</small>
+          </div>
+
+          <div class="split-view">
+            <!-- Left: Car Arrival (รถเข้าจอด / ขาส่ง) -->
+            <div class="split-col">
+              <div class="col-header in">
+                <span><i class="ti ti-arrow-down-left"></i> รถเข้าจอด (ขาส่งไปสนามบิน - ส)</span>
+                <span>3 คัน</span>
+              </div>
+
+              <div class="schedule-row">
+                <div class="sched-time">04:00</div>
+                <div class="sched-info">
+                  <div class="plate">กข 1234 กทม. <span style="font-size:0.8rem; font-weight:normal;">(ช่อง 25)</span></div>
+                  <div class="sched-meta">คุณชาณิช (090-975-6497) · 🔑 ฝากกุญแจ · ผู้โดยสาร 2 คน</div>
+                </div>
+                <div class="submitter-badge"><i class="ti ti-user"></i> สมชาย</div>
+              </div>
+
+              <div class="schedule-row">
+                <div class="sched-time">09:30</div>
+                <div class="sched-info">
+                  <div class="plate">1กศ 5432 กทม. <span style="font-size:0.8rem; font-weight:normal;">(ช่อง 12)</span></div>
+                  <div class="sched-meta">คุณภัทรเดช (081-810-7374) · 🔑 ฝากกุญแจ</div>
+                </div>
+                <div class="submitter-badge"><i class="ti ti-user"></i> แอดมินวิทย์</div>
+              </div>
+
+              <div class="schedule-row">
+                <div class="sched-time">14:00</div>
+                <div class="sched-info">
+                  <div class="plate">ษจ 9876 เชียงใหม่ <span style="font-size:0.8rem; font-weight:normal;">(ช่อง 24)</span></div>
+                  <div class="sched-meta">คุณยานัด (088-286-3934) · ไม่ฝากกุญแจ · ผู้โดยสาร 3 คน</div>
+                </div>
+                <div class="submitter-badge"><i class="ti ti-user"></i> วาสนา</div>
+              </div>
+
+              <div class="cal-box">
+                <div style="font-weight:bold; margin-bottom:4px;"><i class="ti ti-calendar-event"></i> ซิงค์ Google Calendar อัตโนมัติ (แจ้งเตือนล่วงหน้า 30 นาที):</div>
+                <code>ส, 04:00: เวลารถเข้าจอด, ฝกจ.: ฝากกุญแจ, (25): ช่องจอดที่, (ชาณิช): ชื่อติดต่อ, 0909756497: เบอร์โทร, 04:00 - 04:30 [โดย: สมชาย]</code>
+              </div>
+            </div>
+
+            <!-- Right: Car Departure (รับรถกลับ / ขารับ) -->
+            <div class="split-col">
+              <div class="col-header out">
+                <span><i class="ti ti-arrow-up-right"></i> รถออก / รับกลับ (ขารับจากสนามบิน - ร)</span>
+                <span>2 คัน</span>
+              </div>
+
+              <div class="schedule-row">
+                <div class="sched-time">00:35</div>
+                <div class="sched-info">
+                  <div class="plate">กข 1234 กทม. <span style="font-size:0.8rem; font-weight:normal;">(ช่อง 25)</span></div>
+                  <div class="sched-meta">คุณชาณิช · Flight: HO1351 · รถรับ 2 คน · 🔑 ฝากกุญแจ</div>
+                </div>
+                <div class="submitter-badge"><i class="ti ti-user"></i> สมชาย</div>
+              </div>
+
+              <div class="schedule-row">
+                <div class="sched-time">18:30</div>
+                <div class="sched-info">
+                  <div class="plate">ษจ 9876 เชียงใหม่ <span style="font-size:0.8rem; font-weight:normal;">(ช่อง 24)</span></div>
+                  <div class="sched-meta">คุณยานัด · Flight: VZ351 · รถรับ 3 คน</div>
+                </div>
+                <div class="submitter-badge"><i class="ti ti-user"></i> วาสนา</div>
+              </div>
+
+              <div class="cal-box">
+                <div style="font-weight:bold; margin-bottom:4px;"><i class="ti ti-calendar-event"></i> ซิงค์ Google Calendar อัตโนมัติ (แจ้งเตือนล่วงหน้า 30 นาที):</div>
+                <code>ร, 00:35: เวลาไปรับ, ฝกจ.: ฝากกุญแจ, (24): ช่องจอดที่, (ยานัด): ชื่อผู้ติดต่อ, 0882863934: เบอร์โทร, HO1351: Flight, 00:30 - 01:00 [โดย: วาสนา]</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= TAB 4: 4. ตารางการจอง (MONTHLY PARKING SLOT GRID - EXACT MATCH IMAGE 1) ================= -->
+        <div id="tab-slot-grid" class="tab-page">
+          <!-- Toolbar -->
+          <div class="slot-grid-toolbar">
+            <div class="month-nav-group">
+              <span style="font-weight:700; color:#1e3a8a; margin-right:8px;"><i class="ti ti-calendar"></i> ตารางช่องจอดรายเดือน · ต.ค. 2569</span>
+              <button class="btn-month"><i class="ti ti-chevron-left"></i> เดือนก่อน</button>
+              <input type="text" class="month-picker-input" value="October 2026" readonly>
+              <button class="btn-month">เดือนถัดไป <i class="ti ti-chevron-right"></i></button>
+              <button class="btn-month">เดือนนี้</button>
+              <label style="font-size:0.85rem; font-weight:600; margin-left:10px; cursor:pointer; color:#475569;">
+                <input type="checkbox" checked> แสดงรายการที่ออกแล้ว
+              </label>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:12px;">
+              <small style="color:var(--text-muted); font-size:0.85rem;">3 รายการ · 72 ช่อง · เว้นระยะรถออก→เข้า 2 ชั่วโมง</small>
+              <button class="btn-export btn-excel" onclick="alert('Export ตารางช่องจอดรายเดือนเป็น Excel (.xlsx)')">
+                <i class="ti ti-file-spreadsheet"></i> Export Excel
+              </button>
+            </div>
+          </div>
+
+          <!-- 3 Stats Cards Matching Image 1 -->
+          <div class="slot-stats-summary">
+            <div class="slot-stat-box">
+              <div class="slot-stat-val">฿0</div>
+              <div class="slot-stat-sub">รับจริงเดือนนี้ · 0 คันที่ออกแล้ว</div>
+            </div>
+            <div class="slot-stat-box forecast">
+              <div class="slot-stat-val">฿2,000</div>
+              <div class="slot-stat-sub">คาดการณ์ (ยังไม่ออก) · 3 คัน</div>
+            </div>
+            <div class="slot-stat-box total">
+              <div class="slot-stat-val">฿2,000</div>
+              <div class="slot-stat-sub">รวมทั้งเดือน (รับจริง + คาดการณ์)</div>
+            </div>
+          </div>
+
+          <!-- Interactive Monthly Matrix Grid (Matching AirPark / Image 1) -->
+          <div class="matrix-wrapper">
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th class="col-slot">ช่อง / วันที่</th>
+                  <th>1<br><small>พฤ.</small></th>
+                  <th>2<br><small>ศ.</small></th>
+                  <th class="weekend-header">(3)<br><small>ส.</small></th>
+                  <th class="weekend-header">(4)<br><small>อา.</small></th>
+                  <th>5<br><small>จ.</small></th>
+                  <th>6<br><small>อ.</small></th>
+                  <th>7<br><small>พ.</small></th>
+                  <th>8<br><small>พฤ.</small></th>
+                  <th>9<br><small>ศ.</small></th>
+                  <th class="weekend-header">(10)<br><small>ส.</small></th>
+                  <th class="weekend-header">(11)<br><small>อา.</small></th>
+                  <th>12<br><small>จ.</small></th>
+                  <th>13<br><small>อ.</small></th>
+                  <th>14<br><small>พ.</small></th>
+                  <th>15<br><small>พฤ.</small></th>
+                  <th>16<br><small>ศ.</small></th>
+                  <th class="weekend-header">(17)<br><small>ส.</small></th>
+                  <th class="weekend-header">(18)<br><small>อา.</small></th>
+                  <th>19<br><small>จ.</small></th>
+                  <th>20<br><small>อ.</small></th>
+                  <th>21<br><small>พ.</small></th>
+                  <th>22<br><small>พฤ.</small></th>
+                  <th>23<br><small>ศ.</small></th>
+                  <th class="weekend-header">(24)<br><small>ส.</small></th>
+                  <th class="weekend-header">(25)<br><small>อา.</small></th>
+                  <th>26<br><small>จ.</small></th>
+                  <th>27<br><small>อ.</small></th>
+                  <th>28<br><small>พ.</small></th>
+                  <th>29<br><small>พฤ.</small></th>
+                  <th>30<br><small>ศ.</small></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Slot 1 (Matching Image 1: Blue bar on day 25-29) -->
+                <tr>
+                  <td class="col-slot">1</td>
+                  <td colspan="24"></td>
+                  <td colspan="5" style="padding:2px;">
+                    <div class="matrix-bar blue" onclick="alert('ช่อง 1: คุณชาณิช (กข 1234 กทม.) · 25 ต.ค. 12:33 &rarr; 29 ต.ค. 22:18')">
+                      <span><small>12:33</small> Nasa1(2/1)</span>
+                      <small>22:18</small>
+                    </div>
+                  </td>
+                  <td></td>
+                </tr>
+
+                <!-- Slot 2 (Matching Image 1: Back-to-back AA then BB) -->
+                <tr>
+                  <td class="col-slot">2</td>
+                  <td colspan="24"></td>
+                  <td colspan="3" style="padding:2px;">
+                    <div class="matrix-bar orange" onclick="alert('ช่อง 2 (คันที่ 1): 25 ต.ค. 13:36 &rarr; 27 ต.ค. 20:00 (AA)')">
+                      <span><small>13:36</small> 🚗 AA(1)</span>
+                      <small>20:00</small>
+                    </div>
+                  </td>
+                  <td colspan="2" style="padding:2px;">
+                    <div class="matrix-bar red" onclick="alert('ช่อง 2 (คันที่ 2 Back-to-Back): 27 ต.ค. 20:00 &rarr; 29 ต.ค. (BB)')">
+                      <span><small>20:00</small> 🚗 BB(1)</span>
+                    </div>
+                  </td>
+                  <td></td>
+                </tr>
+
+                <!-- Slot 3 to 12 (Available) -->
+                <tr>
+                  <td class="col-slot">3</td>
+                  <td colspan="30" style="color:#94a3b8; font-style:italic;">(ว่าง)</td>
+                </tr>
+                <tr>
+                  <td class="col-slot">4</td>
+                  <td colspan="30" style="color:#94a3b8; font-style:italic;">(ว่าง)</td>
+                </tr>
+                <tr>
+                  <td class="col-slot">5</td>
+                  <td colspan="30" style="color:#94a3b8; font-style:italic;">(ว่าง)</td>
+                </tr>
+                <tr>
+                  <td class="col-slot">6</td>
+                  <td colspan="30" style="color:#94a3b8; font-style:italic;">(ว่าง)</td>
+                </tr>
+                <tr>
+                  <td class="col-slot">7</td>
+                  <td colspan="30" style="color:#94a3b8; font-style:italic;">(ว่าง)</td>
+                </tr>
+                <tr>
+                  <td class="col-slot">8</td>
+                  <td colspan="30" style="color:#94a3b8; font-style:italic;">(ว่าง)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= TAB 5: 5. สรุปรายรับ ================= -->
+        <div id="tab-revenue" class="tab-page">
+          <div class="section-title">
+            <h2><i class="ti ti-report-money"></i> หน้าจอรายงาน สรุปรายรับ (Revenue Report)</h2>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-export btn-excel" onclick="alert('Export สรุปรายรับเป็น Excel')"><i class="ti ti-file-spreadsheet"></i> Export Excel</button>
+              <button class="btn-export btn-pdf" onclick="alert('Export สรุปรายรับเป็น PDF')"><i class="ti ti-file-type-pdf"></i> Export PDF</button>
+            </div>
+          </div>
+
+          <div class="slot-stats-summary" style="grid-template-columns: repeat(4, 1fr); margin-bottom:20px;">
+            <div class="slot-stat-box">
+              <div class="slot-stat-val">฿1,500</div>
+              <div class="slot-stat-sub">รายรับรวมวันนี้</div>
+            </div>
+            <div class="slot-stat-box total">
+              <div class="slot-stat-val">฿1,050</div>
+              <div class="slot-stat-sub">ค่าจอดรถ (Parking Fee)</div>
+            </div>
+            <div class="slot-stat-box forecast">
+              <div class="slot-stat-val">฿450</div>
+              <div class="slot-stat-sub">ค่าบริการรถรับ-ส่ง</div>
+            </div>
+            <div class="slot-stat-box">
+              <div class="slot-stat-val">฿42,800</div>
+              <div class="slot-stat-sub">ยอดสะสมเดือนนี้ (ต.ค.)</div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>วันที่</th>
+                  <th>จำนวนรถ</th>
+                  <th>ค่าจอดรถ (บาท)</th>
+                  <th>ค่ารถรับส่ง (บาท)</th>
+                  <th>ยอดรวมรายรับ (บาท)</th>
+                  <th>สถานะการชำระ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>26 ต.ค. 2026 (วันนี้)</strong></td>
+                  <td>3 คัน</td>
+                  <td>฿1,050</td>
+                  <td>฿450</td>
+                  <td><strong style="color:#059669;">฿1,500</strong></td>
+                  <td><span class="badge-confirmed">ชำระครบ</span></td>
+                </tr>
+                <tr>
+                  <td>25 ต.ค. 2026</td>
+                  <td>12 คัน</td>
+                  <td>฿3,600</td>
+                  <td>฿1,200</td>
+                  <td><strong style="color:#059669;">฿4,800</strong></td>
+                  <td><span class="badge-confirmed">ชำระครบ</span></td>
+                </tr>
+                <tr>
+                  <td>24 ต.ค. 2026</td>
+                  <td>15 คัน</td>
+                  <td>฿4,500</td>
+                  <td>฿1,800</td>
+                  <td><strong style="color:#059669;">฿6,300</strong></td>
+                  <td><span class="badge-confirmed">ชำระครบ</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= TAB 6: 6. สิทธิ์ & ตั้งค่า (MATCHING IMAGE 2 NOTE) ================= -->
+        <div id="tab-settings" class="tab-page">
+          <div class="section-title">
+            <h2><i class="ti ti-settings"></i> สิทธิ์การเข้าถึง & การตั้งค่าระบบ (Visio v1.2)</h2>
+          </div>
+
+          <!-- Feature Toggle Note (From Image 2 Note: "แสดง/ไม่แสดง ให้ไปเลือกหน้า 6. สิทธิ์ & การตั้งค่า") -->
+          <div class="slot-allocator-card" style="background: linear-gradient(135deg, #4338ca, #6366f1); margin-bottom:20px;">
+            <div>
+              <h3 style="font-size:1.05rem; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+                <i class="ti ti-toggle-right"></i> ตัวเลือกการแสดงขั้นตอนงาน (Granular Workflow Setting)
+              </h3>
+              <p style="font-size:0.85rem; opacity:0.9;">
+                กำหนดว่าจะให้แสดงหรือซ่อน "โหมดขั้นตอนงานภาคสนาม 5 ขั้นตอนจริง" ใน <strong>หน้า 2. รายงานการจอง</strong>
+              </p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <label style="background:rgba(255,255,255,0.2); padding:6px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:700;">
+                <input type="checkbox" id="toggleGranularSteps" onchange="toggleStepsVisibility(this.checked)"> แสดงขั้นตอนงาน 5 ขั้นตอน ในหน้า 2
+              </label>
+            </div>
+          </div>
+
+          <div class="split-view" style="margin-bottom:20px;">
+            <!-- Pricing Rules Box -->
+            <div class="split-col">
+              <h3 style="font-size:1rem; margin-bottom:12px; color:#1e3a8a;"><i class="ti ti-clock-dollar"></i> เงื่อนไขเวลาคิดค่าบริการรายวัน</h3>
+              <div style="font-size:0.86rem; line-height:1.7; color:#334155;">
+                <p><strong>ขาเข้า:</strong> ถ้ารถเข้าจอดหลัง <code>23:30 น.</code> ให้คิดค่าบริการเริ่มต้นเป็นวันถัดไป</p>
+                <p><strong>ขาออก:</strong> ขารับรถ ถ้าเอารถออกก่อน <code>00:31 น.</code> ถือว่าไม่นับเป็นวันใหม่ (Grace Period)</p>
+                <p style="margin-top:6px; color:#64748b; font-size:0.78rem;">*สามารถปรับเปลี่ยนเวลาที่ต้องการได้ในหน้าตั้งค่า</p>
+              </div>
+            </div>
+
+            <!-- Back-to-back Gap Setting Box -->
+            <div class="split-col">
+              <h3 style="font-size:1rem; margin-bottom:12px; color:#1e3a8a;"><i class="ti ti-sparkles"></i> ระยะห่างปลอดภัยช่องจอด (Buffer Time Gap)</h3>
+              <div style="font-size:0.86rem; line-height:1.7; color:#334155;">
+                <p>ตั้งค่าระยะเวลาปลอดภัยระหว่างรถคันก่อนหน้าที่ออก กับ รถคันใหม่ที่จะเข้าในช่องเดียวกัน:</p>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+                  <button class="btn-month" style="font-size:0.8rem;">1 ชม.</button>
+                  <button class="btn-month" style="background:#2563eb; color:#fff; font-size:0.8rem;">1.30 ชม. (ค่าปัจจุบัน)</button>
+                  <button class="btn-month" style="font-size:0.8rem;">2 ชม.</button>
+                  <button class="btn-month" style="font-size:0.8rem;">2.30 ชม.</button>
+                  <button class="btn-month" style="font-size:0.8rem;">3 ชม.</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Permissions Matrix Table -->
+          <div class="table-responsive" style="margin-bottom:24px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ระดับผู้ใช้งาน (User Role)</th>
+                  <th>หน้าและสิทธิ์การเข้าถึง (Page & Functions Permissions)</th>
+                  <th>ผู้ใช้งานตัวอย่าง</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>System Admin</strong></td>
+                  <td>
+                    <span class="badge-confirmed" style="background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe;">All Pages</span>
+                    <span class="badge-confirmed" style="background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe;">Page Permissions</span>
+                    <span class="badge-confirmed" style="background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe;">Functions Permissions</span>
+                  </td>
+                  <td>Developer / ผู้ดูแลระบบสูงสุด</td>
+                </tr>
+                <tr>
+                  <td><strong>Admin</strong></td>
+                  <td>
+                    <span class="badge-confirmed">Booking (คีย์จอง)</span>
+                    <span class="badge-confirmed">รถเข้า-รถออก</span>
+                    <span class="badge-confirmed">สรุปรายรับ</span>
+                    <span class="badge-confirmed">รายงานการจอง</span>
+                    <span class="badge-confirmed">ตารางการจอง</span>
+                  </td>
+                  <td>คุณวิทย์ (Admin)</td>
+                </tr>
+                <tr>
+                  <td><strong>Staff</strong></td>
+                  <td>
+                    <span class="badge-confirmed">Booking (คีย์จอง)</span>
+                    <span class="badge-confirmed">รถเข้า-รถออก</span>
+                  </td>
+                  <td>สมชาย, วาสนา (Staff)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Interactive System Admin Granular Permissions Controller -->
+          <div style="background:#fff; border: 2px solid #6366f1; border-radius:12px; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+              <div>
+                <h3 style="font-size:1.05rem; color:#4338ca; display:flex; align-items:center; gap:8px;">
+                  <i class="ti ti-shield-lock"></i> แผงจัดการสิทธิ์รายบุคคล & รายฟังก์ชัน (System Admin Console)
+                </h3>
+                <small style="color:var(--text-muted);">*System Admin สามารถติ๊กเปิด/ปิด ทั้งระดับหน้า (Pages) และระดับปุ่มคำสั่ง (Functions on Page) ได้อิสระ</small>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <label style="font-size:0.85rem; font-weight:600; color:#334155;">เลือกผู้ใช้:</label>
+                <select id="userRoleSelect" onchange="loadUserPerms(this.value)" style="padding:6px 12px; border-radius:6px; border:1px solid #cbd5e1; font-family:inherit; font-size:0.85rem; font-weight:600;">
+                  <option value="staff">สมชาย (Staff - พนักงานทั่วไป)</option>
+                  <option value="admin">คุณวิทย์ (Admin - ผู้จัดการ)</option>
+                  <option value="system_admin">Developer (System Admin)</option>
+                </select>
+                <button type="button" onclick="savePermsDemo()" class="btn-test" style="background:#4f46e5; padding:6px 14px;"><i class="ti ti-device-floppy"></i> บันทึกสิทธิ์</button>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; background:#f8fafc; padding:16px; border-radius:10px; border:1px solid var(--border);">
+              
+              <div style="background:#fff; padding:14px; border-radius:8px; border:1px solid var(--border);">
+                <div style="font-weight:700; color:#1e3a8a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                  <i class="ti ti-browser"></i> 1. สิทธิ์การเข้าถึงหน้า (Pages)
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+                  <label><input type="checkbox" id="p_booking" checked> 1. หน้าคีย์จอง</label>
+                  <label><input type="checkbox" id="p_report" checked> 2. หน้ารายงานการจอง</label>
+                  <label><input type="checkbox" id="p_inout" checked> 3. หน้ารถเข้า-ออก</label>
+                  <label><input type="checkbox" id="p_grid"> 4. หน้าตารางการจอง</label>
+                  <label><input type="checkbox" id="p_revenue"> 5. หน้ารายงานสรุปรายรับ</label>
+                  <label><input type="checkbox" id="p_settings"> 6. หน้าตั้งค่าระบบ</label>
+                </div>
+              </div>
+
+              <div style="background:#fff; padding:14px; border-radius:8px; border:1px solid var(--border);">
+                <div style="font-weight:700; color:#1e3a8a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                  <i class="ti ti-edit"></i> 2. ฟังก์ชันการจอง
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+                  <label><input type="checkbox" id="f_create" checked> บันทึกรายการจองใหม่ (Create)</label>
+                  <label><input type="checkbox" id="f_manual_slot" checked> เลือกช่องจอดเอง (Manual Slot)</label>
+                  <label><input type="checkbox" id="f_edit_booking"> แก้ไขข้อมูลการจอง (Edit Booking)</label>
+                  <label><input type="checkbox" id="f_cancel_booking"> ยกเลิกรายการจอง (Cancel Booking)</label>
+                </div>
+              </div>
+
+              <div style="background:#fff; padding:14px; border-radius:8px; border:1px solid var(--border);">
+                <div style="font-weight:700; color:#1e3a8a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                  <i class="ti ti-list-details"></i> 3. ฟังก์ชันสถานะงาน & ส่งออก
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+                  <label><input type="checkbox" id="f_step_status"> ปรับสถานะงาน 5 ขั้นตอน (Steps Flow)</label>
+                  <label><input type="checkbox" id="f_view_money"> มองเห็นยอดเงิน/ค่าบริการ (View Money)</label>
+                  <label><input type="checkbox" id="f_export_excel"> ส่งออกไฟล์ Excel (Export Excel)</label>
+                  <label><input type="checkbox" id="f_export_pdf"> ส่งออกไฟล์ PDF (Export PDF)</label>
+                </div>
+              </div>
+
+              <div style="background:#fff; padding:14px; border-radius:8px; border:1px solid var(--border);">
+                <div style="font-weight:700; color:#1e3a8a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                  <i class="ti ti-tool"></i> 4. ฟังก์ชันตั้งค่าระดับสูง
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+                  <label><input type="checkbox" id="f_edit_pricing"> ปรับอัตราค่าบริการ (Pricing)</label>
+                  <label><input type="checkbox" id="f_edit_buffer"> ปรับระยะ Buffer ช่องจอด (1-3 ชม.)</label>
+                  <label><input type="checkbox" id="f_manage_users"> สร้าง/แก้ไขผู้ใช้ & สิทธิ์ (Manage Users)</label>
+                  <label><input type="checkbox" id="f_view_audit"> ดูประวัติคนบันทึก (Audit Log)</label>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function setDevice(device) {
+      const frame = document.getElementById('deviceFrame');
+      document.querySelectorAll('.device-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      frame.className = 'device-frame';
+      if (device === 'ipad') frame.classList.add('ipad');
+      if (device === 'mobile') frame.classList.add('mobile');
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.app-nav button').forEach(btn => btn.classList.remove('active'));
+      if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+      }
+
+      document.querySelectorAll('.tab-page').forEach(page => page.classList.remove('active'));
+      const targetPage = document.getElementById('tab-' + tabId);
+      if (targetPage) {
+        targetPage.classList.add('active');
+      }
+    }
+
+    // Key Deposit Selection
+    let isKeyDeposited = true;
+    function setKeyDeposit(val) {
+      isKeyDeposited = val;
+      const optDep = document.getElementById('optDeposit');
+      const optNo = document.getElementById('optNoDeposit');
+      if (val) {
+        optDep.classList.add('selected');
+        optNo.classList.remove('selected');
+      } else {
+        optDep.classList.remove('selected');
+        optNo.classList.add('selected');
+      }
+    }
+
+    // Slot Allocation Mode
+    let slotMode = 'auto';
+    function setSlotMode(mode) {
+      slotMode = mode;
+      const btnAuto = document.getElementById('btnAutoSlot');
+      const btnManual = document.getElementById('btnManualSlot');
+      const slotDisplay = document.getElementById('slotDisplay');
+
+      if (mode === 'auto') {
+        btnAuto.classList.add('active');
+        btnManual.classList.remove('active');
+        slotDisplay.innerHTML = '<i class="ti ti-parking"></i> ช่อง 28 <span style="font-size:0.8rem; font-weight:normal; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px;">⚡ Back-to-Back (คันก่อนออก 02:00 &rarr; ว่างต่อทันที)</span>';
+      } else {
+        btnManual.classList.add('active');
+        btnAuto.classList.remove('active');
+        const chosen = prompt('ระบุหมายเลขช่องจอดที่ต้องการ (เช่น 1 - 72):', '15');
+        if (chosen) {
+          slotDisplay.innerHTML = `<i class="ti ti-hand-click"></i> ช่อง ${chosen} <span style="font-size:0.8rem; font-weight:normal; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px;">(พนักงานระบุเอง)</span>`;
+        }
+      }
+    }
+
+    // Shuttle Passenger Quantities
+    const shuttleCounts = {
+      dep_adult: 2,
+      dep_child: 0,
+      arr_adult: 2,
+      arr_child: 0
+    };
+
+    function changeQty(field, delta) {
+      shuttleCounts[field] = Math.max(0, shuttleCounts[field] + delta);
+      document.getElementById(field).innerText = shuttleCounts[field];
+      calcPricing();
+    }
+
+    function calcPricing() {
+      const days = 4;
+      const parkingFee = days * 150;
+      const shuttleFee = (shuttleCounts.dep_adult + shuttleCounts.arr_adult) * 50 + (shuttleCounts.dep_child + shuttleCounts.arr_child) * 30;
+      const total = parkingFee + shuttleFee;
+
+      document.getElementById('price_parking').innerText = `฿${parkingFee}`;
+      document.getElementById('price_shuttle').innerText = `฿${shuttleFee}`;
+      document.getElementById('price_total').innerText = `฿${total}`;
+    }
+
+    // Submit Booking Demo
+    function submitBookingDemo() {
+      const plate = document.getElementById('f_plate').value || '2ขพ 8899 กทม.';
+      const name = document.getElementById('f_name').value || 'คุณกิตติศักดิ์';
+      const keyText = isKeyDeposited ? '🔑 ฝากกุญแจ' : '🚫 ไม่ฝากกุญแจ';
+
+      // Insert new row into Tab 2 (รายงานการจอง)
+      const tbody = document.getElementById('bookingReportRows');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>#B2610-04</strong></td>
+        <td><strong>${plate}</strong></td>
+        <td>${name}</td>
+        <td><span class="slot-badge auto" style="font-size:0.75rem; background:#1e3a8a; color:#fff; padding:2px 8px; border-radius:4px;">ช่อง 28</span></td>
+        <td>27 ต.ค. 06:00</td>
+        <td>30 ต.ค. 15:30</td>
+        <td>
+          <span class="badge-confirmed"><i class="ti ti-check"></i> Confirmed</span>
+          <button class="btn-edit-row" onclick="openEditModal('#B2610-04', '${plate}', '${name}', '089-123-4567', 'ช่อง 28', '2026-10-27T06:00', '2026-10-30T15:30')">
+            <i class="ti ti-pencil"></i> ปุ่มแก้ไข
+          </button>
+        </td>
+        <td><span class="submitter-badge">สมชาย (Staff)</span></td>
+      `;
+      tbody.prepend(tr);
+
+      // Toast Notification
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.borderLeftColor = '#059669';
+      toast.innerHTML = `
+        <div class="toast-icon">✅</div>
+        <div class="toast-body">
+          <div class="toast-title">บันทึกการจองสำเร็จ! (Booking Created)</div>
+          <div class="toast-msg">${plate} · ${name} · ช่อง 28 (${keyText})</div>
+          <div class="toast-submitter"><i class="ti ti-user-check"></i> บันทึกโดย: สมชาย (Staff)</div>
+        </div>
+      `;
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 350);
+      }, 5000);
+
+      // Auto switch to Tab 2 (รายงานการจอง)
+      setTimeout(() => {
+        const buttons = document.querySelectorAll('.app-nav button');
+        buttons.forEach(b => b.classList.remove('active'));
+        if (buttons[1]) buttons[1].classList.add('active');
+
+        document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-booking-report').classList.add('active');
+      }, 800);
+    }
+
+    // Modal Edit Functions
+    function openEditModal(id, plate, name, phone, slot, inTime, outTime) {
+      document.getElementById('m_booking_id').innerText = id;
+      document.getElementById('m_plate_sub').innerText = plate;
+      document.getElementById('m_plate').value = plate;
+      document.getElementById('m_name').value = name;
+      document.getElementById('m_phone').value = phone;
+      document.getElementById('m_slot').value = slot;
+      document.getElementById('m_in_time').value = inTime;
+      document.getElementById('m_out_time').value = outTime;
+
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    function saveEditBooking() {
+      const id = document.getElementById('m_booking_id').innerText;
+      closeEditModal();
+
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.borderLeftColor = '#2563eb';
+      toast.innerHTML = `
+        <div class="toast-icon">✏️</div>
+        <div class="toast-body">
+          <div class="toast-title">แก้ไขข้อมูลสำเร็จ (Booking Updated)</div>
+          <div class="toast-msg">อัปเดตข้อมูลรายการ ${id} เรียบร้อยแล้ว</div>
+          <div class="toast-submitter"><i class="ti ti-user-check"></i> บันทึกโดย: สมชาย (Staff)</div>
+        </div>
+      `;
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 350);
+      }, 4500);
+    }
+
+    // Cancel Booking Handlers (From Modal and From Row)
+    function cancelBookingFromModal() {
+      const id = document.getElementById('m_booking_id').innerText;
+      const plate = document.getElementById('m_plate_sub').innerText;
+      
+      if (confirm(`ยืนยันการยกเลิกรายการจอง ${id} (${plate}) ใช่หรือไม่?\n\n*เมื่อยกเลิกแล้ว ช่องจอดจะถูกปล่อยว่างทันที`)) {
+        closeEditModal();
+
+        // Update corresponding cell in table if found
+        const rowMap = { '#B2610-01': 'status_cell_b1', '#B2610-02': 'status_cell_b2', '#B2610-03': 'status_cell_b3' };
+        const cell = document.getElementById(rowMap[id]);
+        if (cell) {
+          cell.innerHTML = '<span class="badge-cancelled"><i class="ti ti-ban"></i> Cancelled (ยกเลิกแล้ว)</span>';
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.borderLeftColor = '#dc2626';
+        toast.innerHTML = `
+          <div class="toast-icon">❌</div>
+          <div class="toast-body">
+            <div class="toast-title">ยกเลิกการจองสำเร็จ (Booking Cancelled)</div>
+            <div class="toast-msg">ยกเลิกรายการ ${id} (${plate}) เรียบร้อยแล้ว · ปล่อยช่องจอดว่างทันที</div>
+            <div class="toast-submitter"><i class="ti ti-user-x"></i> บันทึกโดย: สมชาย (Staff)</div>
+          </div>
+        `;
+        document.getElementById('toast-container').appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add('hide');
+          setTimeout(() => toast.remove(), 350);
+        }, 5000);
+      }
+    }
+
+    function cancelBookingDirect(id, plate, cellId) {
+      if (confirm(`ยืนยันการยกเลิกรายการจอง ${id} (${plate}) ใช่หรือไม่?\n\n*เมื่อยกเลิกแล้ว ช่องจอดจะถูกปล่อยว่างทันที`)) {
+        const cell = document.getElementById(cellId);
+        if (cell) {
+          cell.innerHTML = '<span class="badge-cancelled"><i class="ti ti-ban"></i> Cancelled (ยกเลิกแล้ว)</span>';
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.borderLeftColor = '#dc2626';
+        toast.innerHTML = `
+          <div class="toast-icon">❌</div>
+          <div class="toast-body">
+            <div class="toast-title">ยกเลิกการจองสำเร็จ (Booking Cancelled)</div>
+            <div class="toast-msg">ยกเลิกรายการ ${id} (${plate}) เรียบร้อยแล้ว · ปล่อยช่องจอดว่างทันที</div>
+            <div class="toast-submitter"><i class="ti ti-user-x"></i> บันทึกโดย: สมชาย (Staff)</div>
+          </div>
+        `;
+        document.getElementById('toast-container').appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add('hide');
+          setTimeout(() => toast.remove(), 350);
+        }, 5000);
+      }
+    }
+
+    // Toggle Granular Steps from Tab 6 (Image 2 Note)
+    function toggleStepsVisibility(show) {
+      const banner = document.getElementById('granularStepsBanner');
+      if (banner) {
+        banner.style.display = show ? 'block' : 'none';
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.borderLeftColor = show ? '#10b981' : '#f59e0b';
+      toast.innerHTML = `
+        <div class="toast-icon">⚙️</div>
+        <div class="toast-body">
+          <div class="toast-title">อัปเดตการตั้งค่า (Setting Changed)</div>
+          <div class="toast-msg">${show ? 'เปิดการแสดงขั้นตอนงาน 5 ขั้นตอน ในหน้า 2. รายงานการจอง แล้ว' : 'ปิดการแสดงขั้นตอนงาน 5 ขั้นตอน (แสดงเฉพาะสถานะ Confirmed)'}</div>
+          <div class="toast-submitter"><i class="ti ti-settings"></i> ระบบการตั้งค่า</div>
+        </div>
+      `;
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 350);
+      }, 4000);
+    }
+
+    // Toast Notification Presets
+    const toastPresets = [
+      {
+        icon: '🚗',
+        title: 'รายการจองใหม่ (New Booking)',
+        msg: '2ขพ 8899 กทม. · คุณกิตติศักดิ์ · ล็อคช่อง 28 (Auto Back-to-back)',
+        submitter: 'บันทึกโดย: สมชาย (Staff)'
+      },
+      {
+        icon: '📥',
+        title: 'รับรถเข้าจอดสำเร็จ (Check-in)',
+        msg: '1กศ 5432 กทม. · ล็อคช่อง 12 🔑 ฝากกุญแจ',
+        submitter: 'บันทึกโดย: แอดมินวิทย์ (Admin)'
+      },
+      {
+        icon: '⏰',
+        title: 'เตือนล่วงหน้า 30 นาที (Arrival Alert)',
+        msg: 'เที่ยวบิน HO1351 (เครื่องลง 00:35 น.) · คุณยานัด (ช่อง 24)',
+        submitter: 'Google Calendar Sync'
+      },
+      {
+        icon: '🔓',
+        title: 'ปล่อยช่องจอดว่างอัตโนมัติ (Slot Released)',
+        msg: 'ช่อง 25 ปล่อยว่างแล้ว (เครื่องลง 00:35 + Buffer 1.5 ชม.)',
+        submitter: 'ระบบอัตโนมัติ'
+      },
+      {
+        icon: '📤',
+        title: 'ส่งมอบรถเรียบร้อย (Completed)',
+        msg: 'ษจ 9876 เชียงใหม่ · ยอดรวม ฿550 ชำระแล้ว',
+        submitter: 'บันทึกโดย: วาสนา (Staff)'
+      }
+    ];
+
+    let toastIdx = 0;
+    function showRandomToast() {
+      const container = document.getElementById('toast-container');
+      const item = toastPresets[toastIdx % toastPresets.length];
+      toastIdx++;
+
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `
+        <div class="toast-icon">${item.icon}</div>
+        <div class="toast-body">
+          <div class="toast-title">${item.title}</div>
+          <div class="toast-msg">${item.msg}</div>
+          <div class="toast-submitter"><i class="ti ti-user"></i> ${item.submitter}</div>
+        </div>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 350);
+      }, 4500);
+    }
+
+    // Role Presets
+    const rolePresets = {
+      staff: {
+        pages: ['p_booking', 'p_report', 'p_inout'],
+        funcs: ['f_create', 'f_manual_slot']
+      },
+      admin: {
+        pages: ['p_booking', 'p_report', 'p_inout', 'p_grid', 'p_revenue'],
+        funcs: ['f_create', 'f_manual_slot', 'f_edit_booking', 'f_cancel_booking', 'f_step_status', 'f_view_money', 'f_export_excel', 'f_export_pdf', 'f_edit_pricing', 'f_edit_buffer']
+      },
+      system_admin: {
+        pages: ['p_booking', 'p_report', 'p_inout', 'p_grid', 'p_revenue', 'p_settings'],
+        funcs: ['f_create', 'f_manual_slot', 'f_edit_booking', 'f_cancel_booking', 'f_step_status', 'f_view_money', 'f_export_excel', 'f_export_pdf', 'f_edit_pricing', 'f_edit_buffer', 'f_manage_users', 'f_view_audit']
+      }
+    };
+
+    function loadUserPerms(role) {
+      const p = rolePresets[role] || rolePresets.staff;
+      document.querySelectorAll('#tab-settings input[type="checkbox"]').forEach(cb => {
+        if (cb.id !== 'toggleGranularSteps') {
+          cb.checked = (p.pages.includes(cb.id) || p.funcs.includes(cb.id));
+        }
+      });
+    }
+
+    function savePermsDemo() {
+      const role = document.getElementById('userRoleSelect').value;
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.borderLeftColor = '#6366f1';
+      toast.innerHTML = `
+        <div class="toast-icon">🔐</div>
+        <div class="toast-body">
+          <div class="toast-title">อัปเดตสิทธิ์สำเร็จ (Permissions Saved)</div>
+          <div class="toast-msg">บันทึกสิทธิ์สำหรับ ${role} ทั้งระดับหน้าและระดับปุ่มคำสั่งเรียบร้อยแล้ว</div>
+          <div class="toast-submitter"><i class="ti ti-shield-check"></i> System Admin Console</div>
+        </div>
+      `;
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 350);
+      }, 4500);
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      calcPricing();
+    });
+  </script>
+</body>
+</html>
